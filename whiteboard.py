@@ -1,23 +1,40 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 
-mp_hands = mp.solutions.hands
+mp_hands = mp.solutions.hands.Hands()
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 
-mp_model = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.6)
-
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FPS, 30)
+
+_, img = cap.read()
+img_width, img_height, c = img.shape
+output_img = np.ones((img_width,img_height,3))
 
 while cv2.waitKey(1) != 27:
     flag, img = cap.read()
+
     if not flag:
         break
+
     img = cv2.flip(img, 1)
-    res = mp_model.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    res = mp_hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     if res.multi_hand_landmarks:
         for hand_landmark in res.multi_hand_landmarks:
-            mp_drawing.draw_landmarks(img, hand_landmark, mp_hands.HAND_CONNECTIONS,
-                                      mp_drawing_styles.get_default_hand_landmarks_style(),
-                                      mp_drawing_styles.get_default_hand_connections_style())
+            landmarks = hand_landmark.landmark
+            for id, landmark in enumerate(landmarks):
+
+                x = int(landmark.x * img_width)
+                y = int(landmark.y * img_height)
+
+                # if id == 4:
+                #     cv2.circle(output_img, (x,y), 3, (0,0,255), 10)
+                if id == 8:
+                    cv2.circle(img, (x,y), 3, (0,255,0), 10)
+                    cv2.circle(output_img, (x,y), 3, (0,255,0), 10)
+                # if id == 12:
+                #     cv2.circle(output_img, (x,y), 3, (255,0,0), 10)
     cv2.imshow("WhiteBoard", img)
+    cv2.imshow("Output", output_img)
