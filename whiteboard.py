@@ -13,15 +13,19 @@ cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FPS, 30)
 
 _, img = cap.read()
+img = cv2.resize(img, (screen_width, screen_height))
 img_height, img_width, c = img.shape
 output_img = np.ones((img_height,img_width,3))
+
+prev_x = 0
+prev_y = 0
 
 while cv2.waitKey(1) != 27:
     _, img = cap.read()
 
     if not _:
         break
-
+    img = cv2.resize(img, (screen_width, screen_height))
     img = cv2.flip(img, 1)
     res = mp_hands.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     if res.multi_hand_landmarks:
@@ -38,9 +42,14 @@ while cv2.waitKey(1) != 27:
                     cv2.circle(img, (x,y), 3, (0,255,0), 10)
                     index_y = y
                     index_x = x
-                    if abs(index_y - thumb_y) < 35 and abs(index_x - thumb_x) < 35:
-                        cv2.circle(output_img, (x,y), 3, (0,255,0), 10)
-                    pyautogui.moveTo(x,y)
+                    if abs(index_y - thumb_y) < 60 and abs(index_x - thumb_x) < 60:
+                        if(prev_x == 0 and prev_y == 0):
+                            cv2.circle(output_img, (x,y), 2, (0,255,0))
+                        else:
+                            cv2.line(output_img, (prev_x, prev_y), (x,y), (0,255,0), 5)
+                    prev_x = x
+                    prev_y = y
+                    pyautogui.moveTo(x+10,y+30)
 
                 # if id == 12:
                 #     cv2.circle(img, (x,y), 3, (255,0,0), 10)
